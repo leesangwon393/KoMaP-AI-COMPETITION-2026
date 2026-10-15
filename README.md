@@ -42,9 +42,9 @@ mIoU는 영상별 네 클래스 IoU의 평균을 구한 뒤 20장에 대해 동�
 
 ## 모델 아키텍처
 
-아래 이미지는 **보고서에 사용한 아키텍처 그림을 그대로** 수록했습니다. 클릭하면 원본 크기로 볼 수 있습니다.
+아래 그림은 실제 `forward`와 고정 모델 설정을 기준으로 수정한 아키텍처입니다. 각 모델의 전체 디코더와 상세 정보 결합 위치를 표시했습니다. 클릭하면 크게 볼 수 있고, [SVG 원본](resources/images/report-architectures.svg)으로 확대·편집할 수 있습니다.
 
-[![보고서의 세 모델 아키텍처와 scSE·ECA 구조](resources/images/report-architectures.png)](resources/images/report-architectures.png)
+[![코드와 일치하도록 수정한 세 모델 아키텍처와 scSE·ECA 구조](resources/images/report-architectures.png)](resources/images/report-architectures.png)
 
 파란색은 인코더, 주황색은 디코더, 점선은 skip connection, `C`는 특징 연결입니다. `A`는 scSE, `B`는 RSU 내부 ECA의 적용 위치입니다.
 
@@ -100,7 +100,7 @@ mIoU는 영상별 네 클래스 IoU의 평균을 구한 뒤 20장에 대해 동�
 
 RSU는 내부 U 분기의 다중 해상도 특징을 입력 합성곱 특징에 더하는 블록입니다. RSU4F는 추가 pooling 대신 dilation을 사용합니다. ECA는 잔차 분기에서 **GAP → 채널 축 Conv1d(kernel=3) → sigmoid → 채널별 곱**을 수행한 뒤 입력 특징과 더합니다. Model 3에는 scSE를 사용하지 않습니다. **총 파라미터: 44,051,485개.**
 
-> 그림은 경로를 요약한 개념도입니다. 실제 Model 1의 상세 경로 결합은 디코더에서의 concatenation이며, Model 2의 `α init = 0` 표시는 마지막 잔차 합성곱의 0 초기화를 뜻합니다. 별도 학습 scalar α는 없습니다.
+그림의 Model 1은 224²에서 16채널 상세 특징, 448²에서 1채널 grayscale을 각각 디코더에 연결합니다. Model 2는 게이트를 거친 상세 특징을 32채널로 투영·확대한 뒤, **가중치를 0으로 초기화한 마지막 1×1 Conv**를 거쳐 의미 특징에 더합니다. 별도 학습 scalar α는 사용하지 않습니다.
 
 ### 공통 학습 설정
 
