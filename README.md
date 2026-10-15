@@ -1,5 +1,9 @@
 # KoMaP metallographic image segmentation
 
+## Final submission code — 2026-10-15
+
+The final **model1 / model2 / model3** training and inference code follows the workspace directory rules: [src](src), [resources](resources), external initialization weights in Thirdparty, and runtime outputs in run. See [execution and weight placement instructions](resources/FINAL_MODELS.md). The frozen30/35/35 D4 ensemble scored **81.0183% Validation20 mIoU**. Data and weights are supplied separately. The summaries below are historical and do not describe the final submitted configuration.
+
 Experiments on four-class segmentation of optical-microscopy images. The repository contains training/evaluation code, experiment configurations, and a compact record of completed Context448 runs. Dataset images, checkpoints, and prediction masks are intentionally excluded; see [data setup](docs/DATA_AND_REPRODUCIBILITY_KO.md).
 
 ## Latest experiment update — 2026-10-08

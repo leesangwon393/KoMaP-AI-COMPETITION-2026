@@ -1,0 +1,21 @@
+{
+  "models": [
+    "model1",
+    "model2",
+    "model3"
+  ],
+  "weights": [
+    0.3,
+    0.35,
+    0.35
+  ],
+  "frozen": true,
+  "class_names": [
+    "Primary Si",
+    "Al3Ni",
+    "Eutectic Si",
+    "Al"
+  ],
+  "validation_reference_miou": 0.8101829207313666,
+  "test_used_for_selection": false
+}

@@ -1,0 +1,5 @@
+U2_ECA supplied by 이상원. U2-Net-derived vendor source attribution retained.
+Upstream U2-Net: https://github.com/xuebinqin/U-2-Net
+License obtained from https://raw.githubusercontent.com/xuebinqin/U-2-Net/master/LICENSE
+R052/R073 source: audited round56 snapshots. torchvision public ConvNeXt-Tiny / ResNet101 weights retained with exact SHA in original config.
+No claim that existing U-Net, scSE, ECA, ConvNeXt or ResNet methods were invented by this team.

@@ -1,0 +1,20 @@
+[
+  {
+    "number": 1,
+    "name": "상세 보정형",
+    "internal_id": "R052",
+    "weight": 0.3
+  },
+  {
+    "number": 2,
+    "name": "의미 게이트형",
+    "internal_id": "R073",
+    "weight": 0.35
+  },
+  {
+    "number": 3,
+    "name": "다중해상도형",
+    "internal_id": "U2_ECA",
+    "weight": 0.35
+  }
+]

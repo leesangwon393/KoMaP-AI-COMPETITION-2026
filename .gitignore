@@ -14,3 +14,10 @@ __pycache__/
 # Runtime logs and small source-only handoff archives
 *.log
 !releases/KoMaP_UNet_Transformer_Code_*.zip
+
+# Final execution outputs and data (settings remain tracked)
+run/
+resources/data/
+Thirdparty/weights/
+*.npz
+*.npy
