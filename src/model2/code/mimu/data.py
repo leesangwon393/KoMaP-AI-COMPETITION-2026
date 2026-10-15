@@ -21,65 +21,6 @@ def decode_mask(rgb):
     return labels
 
 
-def read_image(path, size=224):
-    with Image.open(path) as im:
-        # All supplied inputs have equal RGB channels and opaque alpha.
-        gray = im.convert('L').resize((size, size), Image.Resampling.BILINEAR)
-        array = np.asarray(gray, dtype=np.float32) / 255.0
-    return torch.from_numpy(array.copy()).unsqueeze(0)
-
-
-def apply_transform(tensor, variant):
-    # Match the released augment_data.py, including its duplicate 180-degree
-    # transforms (both-axes flip and rotate180). 1 original + 5 variants.
-    if variant == 0:
-        return tensor
-    if variant == 1:
-        return tensor.flip(-2)
-    if variant == 2:
-        return tensor.flip(-1)
-    if variant in (3, 5):
-        return tensor.flip((-2, -1))
-    if variant == 4:
-        return tensor.rot90(-1, (-2, -1))
-    raise ValueError(variant)
-
-
-class PhaseDataset(Dataset):
-    def __init__(self, root, split, size=224, augment=False):
-        self.root, self.split, self.size = Path(root), split, size
-        if augment and split != 'train':
-            raise ValueError('Augmentation is only allowed on train')
-        self.variants = 6 if augment else 1
-        self.paths = sorted((self.root / split / 'images').glob('*.png'))
-        if not self.paths:
-            raise ValueError(f'No images in {self.root / split}')
-        self.images, self.labels, self.original_labels = [], [], []
-        for path in self.paths:
-            self.images.append(read_image(path, size))
-            if split != 'test':
-                mask_path = self.root / split / 'masks' / path.name.replace('_image', '_mask')
-                with Image.open(mask_path) as mask, Image.open(path) as im:
-                    if mask.size != im.size:
-                        raise ValueError(f'Image/mask size mismatch: {path}')
-                    original = decode_mask(np.asarray(mask.convert('RGB')))
-                small = np.array(Image.fromarray(original).resize(
-                    (size, size), Image.Resampling.NEAREST), copy=True)
-                self.labels.append(torch.from_numpy(small).long())
-                if split == 'valid':
-                    self.original_labels.append(original)
-
-    def __len__(self):
-        return len(self.paths) * self.variants
-
-    def __getitem__(self, index):
-        i, variant = divmod(index, self.variants)
-        image = apply_transform(self.images[i], variant)
-        if self.split == 'test':
-            return image, i
-        return image, apply_transform(self.labels[i], variant), i
-
-
 def _raw_gray(path):
     with Image.open(path) as im:
         return np.asarray(im.convert('L'), dtype=np.uint8).copy()

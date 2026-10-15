@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import torch
 import numpy as np
-from torch.nn import functional as F
 
-from .context_hrnet import ContextDataset
+from .context_data import ContextDataset
 
 
 def build_class_tile_pools(labels, origins, patch_size=224, min_fraction=0.10, classes=(1, 2)):
@@ -85,31 +84,14 @@ def apply_photometric(image, generator=None):
     return image.clamp(0, 1)
 
 
-def jitter_origin(label, y, x, cls, min_fraction=.1, generator=None):
-    """Native pixel offsets; retain the rich-class threshold for targeted draws."""
-    for _ in range(8):
-        dy, dx = torch.randint(-56, 57, (2,), generator=generator).tolist()
-        yy = min(max(y + dy, 0), label.shape[0] - 224)
-        xx = min(max(x + dx, 0), label.shape[1] - 224)
-        if cls is None or np.mean(label[yy:yy+224, xx:xx+224] == cls) >= min_fraction:
-            return yy, xx
-    return y, x
 
 
-def zoom_center(image, target, factor):
-    image_size, target_size = int(448 * factor), int(224 * factor)
-    image = F.interpolate(image[None], size=(image_size, image_size),
-                          mode="bilinear", align_corners=False)[0]
-    target = F.interpolate(target[None, None].float(), size=(target_size, target_size),
-                           mode="nearest-exact")[0, 0].long()
-    a, b = (image_size - 448) // 2, (target_size - 224) // 2
-    return image[:, a:a+448, a:a+448], target[b:b+224, b:b+224]
 
 
 class Pro6000ContextDataset(ContextDataset):
     """Context448 input with optional class-balanced rare-phase crop selection."""
     def __init__(self, *args, sampling="eutectic", photometric=False, targeted_probability=0.5,
-                 scale_jitter=False, crop_jitter=False, boundary_sampling=False, full_context_supervision=False, distinct_batch_sources=False, **kwargs):
+                 boundary_sampling=False, full_context_supervision=False, distinct_batch_sources=False, **kwargs):
         if sampling not in ("eutectic", "balanced_rare"):
             raise ValueError(f"Unknown context sampling policy: {sampling}")
         super().__init__(*args, **kwargs)
@@ -120,8 +102,6 @@ class Pro6000ContextDataset(ContextDataset):
         self.sampling = sampling
         self.photometric = photometric
         self.targeted_probability = targeted_probability
-        self.scale_jitter = scale_jitter
-        self.crop_jitter = crop_jitter
         self.boundary_scores = build_boundary_tile_scores(self.labels, self.origins) if boundary_sampling else None
         self.class_pools = None
         if sampling == "balanced_rare":
@@ -144,8 +124,6 @@ class Pro6000ContextDataset(ContextDataset):
             )
             if self.distinct_batch_sources:
                 self.batch_sources.append(source)
-            if self.crop_jitter:
-                y, x = jitter_origin(self.labels[source], y, x, cls, self.eutectic_fraction)
             image = torch.from_numpy(self.padded[source][y:y+448, x:x+448].copy()).float()[None] / 255.0
             if self.full_context_supervision:
                 target = torch.from_numpy(self.padded_labels[source][y:y+448, x:x+448].astype(np.int64, copy=True))
@@ -155,10 +133,6 @@ class Pro6000ContextDataset(ContextDataset):
             image, target = image.rot90(k, (-2, -1)), target.rot90(k, (-2, -1))
             if bool(torch.randint(2, ()).item()):
                 image, target = image.flip(-1), target.flip(-1)
-        if self.scale_jitter:
-            factor = (1.0, 1.25, 1.5)[int(torch.randint(3, ()).item())]
-            if factor != 1.0:
-                image, target = zoom_center(image, target, factor)
         if self.photometric:
             image = apply_photometric(image)
         return image, target, source

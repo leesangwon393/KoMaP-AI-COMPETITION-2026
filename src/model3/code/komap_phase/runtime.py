@@ -27,16 +27,6 @@ def seed_everything(seed, deterministic=False):
     torch.backends.cudnn.allow_tf32 = False
 
 
-def device_for(name):
-    if name == 'auto':
-        name = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
-    if name == 'cuda' and not torch.cuda.is_available():
-        raise RuntimeError('CUDA unavailable; check server PyTorch build and GPU driver')
-    if name == 'mps' and not torch.backends.mps.is_available():
-        raise RuntimeError('MPS unavailable')
-    return torch.device(name)
-
-
 def environment(device):
     dependencies = {}
     for package in ('numpy', 'Pillow','timm','segmentation-models-pytorch','huggingface-hub','safetensors'):

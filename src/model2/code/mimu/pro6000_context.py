@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 import numpy as np
 
-from .context_hrnet import ContextDataset
+from .context_data import ContextDataset
 
 
 def build_class_tile_pools(labels, origins, patch_size=224, min_fraction=0.10, classes=(1, 2)):

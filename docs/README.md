@@ -12,8 +12,9 @@
 | 10월 8일까지의 실험 이력 | [전체 실험 스냅샷](experiment_snapshot_20261008/TOTAL_SUMMARY_KO.md) |
 | 실험 계열·최신 완료 기록 | [실험 지도](EXPERIMENT_INDEX_KO.md) |
 | 기존 R012–R044 계열 | [과거 실험 결과](EXPERIMENT_RESULTS_KO.md) |
+| 최종 코드의 제거 근거·검증 | [코드 비판 검토](CODE_REVIEW_20261015_KO.md) |
 | 과거 README | [2026-10-08 기록](README_HISTORY_20261008.md) |
 
 `experiment_snapshot_20261008/`의 대기·실행 상태는 그 날짜의 스냅샷입니다. 이후 완료된 증강·밝기 실험은 최신 원자료 집계 문서를 우선합니다. 현재 README에서 R022를 최종 제출 모델로 안내하지 않으며, 기존 문서의 “현재 최고”, “진행 중”도 작성 시점의 표현입니다.
 
-새 출력·체크포인트는 `run/`, 설정·환경·최종 메타데이터는 `resources/`에 둡니다. `docs/experiments/`에는 과거 실험의 Markdown 설명만 남겼습니다. 원 실행 코드·실험 설정·릴리스는 [보관 브랜치](https://github.com/leesangwon393/KoMaP-AI-COMPETITION-2026/tree/archive/experiments-before-cleanup-20261015)에서 확인할 수 있습니다. 모델별 `src/modelN/code/`는 최종 학습·추론의 의존성이므로 유지합니다.
+새 출력·체크포인트는 `run/`, 설정·환경·최종 메타데이터는 `resources/`에 둡니다. `docs/experiments/`에는 과거 실험의 Markdown 설명만 남겼습니다. 원 실행 코드·실험 설정·릴리스는 [보관 브랜치](https://github.com/leesangwon393/KoMaP-AI-COMPETITION-2026/tree/archive/experiments-before-cleanup-20261015)에서 확인할 수 있습니다. 모델별 `src/modelN/code/`에는 최종 구조·샘플링·손실을 남기고 미사용 실험 후보를 제거했습니다. 공통 학습·평가·타일 복원·저장 로직은 `src/`의 평면 모듈로 합쳤습니다.

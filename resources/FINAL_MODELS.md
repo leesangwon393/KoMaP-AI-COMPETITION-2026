@@ -6,8 +6,8 @@
 
 | 경로 | 역할 |
 |---|---|
-| `src/` | 최종 공통 추론·앙상블·factory·평가 |
-| `src/model{1,2,3}/` | 모델 생성·학습·추론 진입점과 모델별 보존 소스 |
+| `src/` | 최종 공통 학습·추론·앙상블·factory·평가·체크포인트 I/O |
+| `src/model{1,2,3}/` | 모델 생성·학습·추론 진입점과 최종 모델별 구현 |
 | `resources/` | 데이터 경로·설정·환경·결과 메타데이터·라이선스 |
 | `Thirdparty/weights/` | ImageNet 초기화 가중치(별도 공유, Git 제외) |
 | `run/checkpoints/model{1,2,3}/best.pt` | 배포 체크포인트(별도 공유, Git 제외) |

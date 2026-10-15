@@ -1,87 +1,42 @@
-"""RSU backbone and multiclass full U²-Net adapters.
+"""Full U²-Net with ECA on all outer RSU residual branches.
 
-Based on xuebinqin/U-2-Net (Apache-2.0). Modified design: backbone feature
-adapters, optional scSE, raw multiclass logits, center-only supervision.
-The unchanged upstream blocks are in vendor_u2net.py; see LICENSE_U2NET.txt.
+Based on xuebinqin/U-2-Net (Apache-2.0). Upstream blocks remain unchanged
+in vendor_u2net.py; attribution and license are in resources/licenses/.
 """
 import torch
 from torch import nn
 from torch.nn import functional as F
 
 from . import vendor_u2net as upstream
-from .paper_modules import ECA, CBAM
 
 
 def resize(x,size):
     return F.interpolate(x,size=size,mode='bilinear',align_corners=False)
 
 
-class RSUEncoder(nn.Module):
-    channels=[64,128,256,512,512,512]
-
-    def __init__(self):
-        super().__init__()
-        self.stage1=upstream.RSU7(3,32,64)
-        self.stage2=upstream.RSU6(64,32,128)
-        self.stage3=upstream.RSU5(128,64,256)
-        self.stage4=upstream.RSU4(256,128,512)
-        self.stage5=upstream.RSU4F(512,256,512)
-        self.stage6=upstream.RSU4F(512,256,512)
-        self.pool=nn.MaxPool2d(2,stride=2,ceil_mode=True)
-
+class ECA(nn.Module):
+    def __init__(self,c):
+        super().__init__();self.conv=nn.Conv1d(1,1,3,padding=1,bias=False)
     def forward(self,x):
-        result=[]
-        for i in range(1,7):
-            x=getattr(self,f'stage{i}')(x)
-            result.append(x)
-            if i<6: x=self.pool(x)
-        return result
-
-
-class RSUBackbone(nn.Module):
-    """Raw stages2–6 at OS2/4/8/16/32, adapted to B's five skip widths."""
-    channels=[64,256,512,1024,2048]
-
-    def __init__(self,mean,std):
-        super().__init__()
-        self.raw=RSUEncoder()
-        self.adapters=nn.ModuleList([
-            nn.Sequential(nn.Conv2d(cin,cout,1,bias=False),nn.BatchNorm2d(cout),nn.ReLU())
-            if cin!=cout else nn.Identity()
-            for cin,cout in zip(self.raw.channels[1:],self.channels)])
-        self.register_buffer('input_mean',torch.tensor(mean).reshape(1,3,1,1))
-        self.register_buffer('input_std',torch.tensor(std).reshape(1,3,1,1))
-
-    def forward(self,x):
-        if x.shape[1]!=1: raise ValueError('Expected grayscale input')
-        z=(x.repeat(1,3,1,1)-self.input_mean)/self.input_std
-        raw=self.raw(z)
-        return [adapter(feature) for adapter,feature in zip(self.adapters,raw[1:])]
+        gate=self.conv(x.mean((-2,-1))[:,None]).sigmoid()[:,0,:,None,None]
+        return x*gate
 
 
 class FullU2Net(upstream.U2NET):
     """Keep upstream feature widths/6-head fusion; return logits, never sigmoid.
 
-    Optional attention is after each of five decoder RSUs. New gates are
-    initialized under an isolated RNG, preserving the upstream allocation.
+    ECA is applied inside every outer RSU before residual addition.
     """
-    def __init__(self,scse_factory,scse,seed,decoder_stages='all',rsu_eca=False,fusion_cbam=False):
+    def __init__(self,seed):
         super().__init__(in_ch=3,out_ch=4)
-        with torch.random.fork_rng(devices=[]):
-            torch.random.default_generator.manual_seed(seed+4101)
-            gates=[scse_factory(c) for c in (512,256,128,64,64)]
-        active=range(5) if decoder_stages=='all' else (3,4) if decoder_stages=='last2' else ()
-        self.attentions=nn.ModuleList([gate if scse and i in active else nn.Identity() for i,gate in enumerate(gates)])
-        # Separate RNG streams keep shared U²-Net weights, scSE weights, and the
-        # global sampling stream identical across architectural ablations.
+        # Preserve state-dict layout and the released ECA initialization stream.
+        self.attentions=nn.ModuleList([nn.Identity() for _ in range(5)])
         with torch.random.fork_rng(devices=[]):
             torch.random.default_generator.manual_seed(seed+4102)
-            self.rsu_eca=nn.ModuleList([ECA(c) for c in (64,128,256,512,512,512,512,256,128,64,64)]) if rsu_eca else nn.ModuleList()
-        with torch.random.fork_rng(devices=[]):
-            torch.random.default_generator.manual_seed(seed+4103)
-            self.fusion_attentions=nn.ModuleList([CBAM(c) if fusion_cbam else nn.Identity() for c in (64,64,128,256,512,512)])
+            self.rsu_eca=nn.ModuleList([ECA(c) for c in (64,128,256,512,512,512,512,256,128,64,64)])
+        self.fusion_attentions=nn.ModuleList([nn.Identity() for _ in range(6)])
         self.eca_handles=[]
-        if rsu_eca:
+        if self.rsu_eca:
             stages=[getattr(self,f'stage{i}') for i in range(1,7)]+[getattr(self,f'stage{i}d') for i in range(5,0,-1)]
             for index,stage in enumerate(stages):
                 # Transform the learned residual branch before adding hxin.
