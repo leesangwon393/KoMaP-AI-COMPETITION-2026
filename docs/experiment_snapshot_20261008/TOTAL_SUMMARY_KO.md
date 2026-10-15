@@ -124,7 +124,7 @@ DySample200은100epoch 대비+0.3728%p였으나 학습 길이와 cosine 경로�
 4. 구조가 개선되면 same-server D03 및 증강 조합을 별도 검증한다. 기존Mac 결과와 H100 값을 섞어 비교하지 않는다.
 5. 구조/recipe 확정 후 독립 Test를 평가한다. 현재 결과는 Valid 기반 탐색 결과다.
 
-서버 패키지: [ZIP](../../releases/KoMaP_UNet_Transformer_Code_20261008.zip), [README](../../experiments/transformer_hybrid_lab_20261007/README_KO.md).
+서버 패키지: [ZIP](https://github.com/leesangwon393/KoMaP-AI-COMPETITION-2026/blob/95b268a/releases/KoMaP_UNet_Transformer_Code_20261008.zip), [README](../experiments/transformer_hybrid_lab_20261007/README_KO.md).
 
 ## 전체 장부
 
@@ -392,4 +392,4 @@ DySample200은100epoch 대비+0.3728%p였으나 학습 길이와 cosine 경로�
 | C3 | 42/43/44 | 향상 없음 | 완료(집계 보고) | — | 79.7224 | -0.0978 | B |
 | S_CBAM | 42/43/44 | 저하 | 완료(집계 보고) | — | 79.5659 | -0.2543 | B |
 
-미착수 등록45행은 [PENDING.csv](PENDING.csv)에 있다. 이외 학습 중·연결 확인 불가 작업도 남은 큐에 포함된다.
+미착수 등록45행은 [PENDING.csv](PENDING.csv.md)에 있다. 이외 학습 중·연결 확인 불가 작업도 남은 큐에 포함된다.

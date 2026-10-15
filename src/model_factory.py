@@ -1,6 +1,6 @@
 """Build the released R052/R073 recipes and their train-only helpers.
 
-Historical candidate architectures and augmentations live in experiments/.
+Historical candidate experiments are documented in docs/experiments/.
 Model-specific modules retain the released state-dict layout and RNG order.
 """
 from pathlib import Path

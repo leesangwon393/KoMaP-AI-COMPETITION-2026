@@ -54,17 +54,51 @@ mIoU는 영상별 네 클래스 IoU의 평균을 구한 뒤 20장에 대해 동�
 
 전체 448×448 정답으로 학습하며 경계가 많은 패치를 우선 선택합니다. Cutout, Gradient Centralization, 모든 클래스를 대상으로 한 Lovasz를 사용했습니다.
 
+448×448 입력 기준의 특징 크기는 다음과 같습니다. 다섯 디코더 블록 모두 두 번의 3×3 합성곱·BN·SiLU 뒤 scSE를 적용하고, 0 초기화한 1×1 projection 잔차를 더합니다. scSE는 채널 가중치와 위치 가중치를 각각 특징에 곱한 결과를 합산합니다.
+
+| 단계 | 공간 크기 | 채널 / 결합 |
+|---|---:|---|
+| Encoder E1 → E4 | 112² → 56² → 28² → 14² | 96 → 192 → 384 → 768 |
+| Decoder 4 → 2 | 28² → 56² → 112² | 깊은 특징과 skip 연결 → 256 → 128 → 64 |
+| Global context | 28² | 256채널 특징의 GAP → 1×1 Conv → broadcast 잔차 덧셈 |
+| Raw detail | 224² | grayscale → stride-2 Conv 1→16 → 병렬 depthwise 3×3·5×5 보정 |
+| Decoder 1 | 224² | 의미 64 + 상세 16 연결 → 64 |
+| Decoder 0 / head | 448² | 특징 64 + grayscale 1 연결 → 32 → 4 logits |
+
+상세 보정은 두 depthwise 분기의 ReLU 출력을 연결하고 1×1 Conv로 16채널에 투영한 뒤 원래 상세 특징에 더합니다. 투영을 0으로 초기화하여 학습 시작 시 기본 상세 특징을 유지합니다. **총 파라미터: 32,458,571개.**
+
 ### Model 2 — ResNet101 U-Net + Semantic-Gated Detail
 
 **상세 정보의 기여를 의미 특징에 따라 조절**하기 위한 모델입니다. ImageNet 초기화 ResNet101과 scSE 디코더의 의미 특징으로 sigmoid 게이트를 만들고, 별도 grayscale 상세 특징에 곱합니다. 이를 채널 투영·보간한 뒤 의미 특징에 더하며, 마지막 잔차 합성곱의 가중치는 0으로 초기화했습니다.
 
 전체 448×448 정답으로 학습하고 배치의 네 패치를 서로 다른 원본에서 추출합니다. 영상별 Squared Dice와 정답에 존재하는 클래스의 Lovasz를 사용하며, Cutout·Gradient Centralization은 적용하지 않았습니다.
 
+| 단계 | 공간 크기 | 채널 / 결합 |
+|---|---:|---|
+| ResNet stem | 224² | 7×7 stride-2 Conv → BN → ReLU, 64채널 |
+| Encoder E1 → E4 | 112² → 56² → 28² → 14² | 256 → 512 → 1024 → 2048 |
+| Decoder 4 → 1 | 28² → 56² → 112² → 224² | skip 연결 후 256 → 128 → 64 → 64 |
+| Decoder 0 | 448² | 의미 특징 F, 32채널; 각 디코더에 scSE 적용 |
+| Raw detail D | 224² | stride-2 Conv → 16채널, 병렬 depthwise 3×3·5×5 잔차 보정 |
+| Semantic gate G | 224² | F 보간 → 1×1 Conv 32→16 → sigmoid |
+| Residual fusion / head | 448² | D⊙G → 1×1 Conv 16→32 → 보간 → 0 초기화 Conv → F에 덧셈 → 4 logits |
+
+게이트는 의미 경로가 제공하는 문맥으로 상세 경로를 조절합니다. 마지막 잔차 합성곱이 0으로 초기화되므로 초기에는 의미 경로의 특징을 그대로 사용하고, 학습하면서 상세 보정량을 조정합니다. **총 파라미터: 51,614,459개.**
+
 ### Model 3 — Full U²-Net + ECA
 
 **중첩된 다중 해상도 특징으로 앞선 두 모델과 다른 예측을 확보**하기 위한 모델입니다. 6개 인코더·5개 디코더의 총 11개 outer RSU에서 잔차 특징에 ECA를 적용합니다. 여섯 side output을 같은 크기로 복원·연결하여 최종 logits를 만듭니다.
 
 사전학습 없이 학습하고 중앙 224×224 영역에만 손실을 적용합니다. 손실은 융합 출력에만 적용하며 별도 deep supervision은 사용하지 않습니다.
+
+| 단계 | 공간 크기 | RSU / 출력 채널 |
+|---|---:|---|
+| Encoder 1 → 3 | 448² → 224² → 112² | RSU7/64 → RSU6/128 → RSU5/256 |
+| Encoder 4 → 6 | 56² → 28² → 14² | RSU4/512 → RSU4F/512 → RSU4F/512 |
+| Decoder 5 → 1 | 28² → 56² → 112² → 224² → 448² | skip 연결 → RSU4F/512 → RSU4/256 → RSU5/128 → RSU6/64 → RSU7/64 |
+| Side heads / fusion | 모두 448²로 복원 | 최심부 encoder + 5개 decoder의 4채널 출력을 연결(24채널) → 1×1 Conv → 4 logits |
+
+RSU는 내부 U 분기의 다중 해상도 특징을 입력 합성곱 특징에 더하는 블록입니다. RSU4F는 추가 pooling 대신 dilation을 사용합니다. ECA는 잔차 분기에서 **GAP → 채널 축 Conv1d(kernel=3) → sigmoid → 채널별 곱**을 수행한 뒤 입력 특징과 더합니다. Model 3에는 scSE를 사용하지 않습니다. **총 파라미터: 44,051,485개.**
 
 > 그림은 경로를 요약한 개념도입니다. 실제 Model 1의 상세 경로 결합은 디코더에서의 concatenation이며, Model 2의 `α init = 0` 표시는 마지막 잔차 합성곱의 0 초기화를 뜻합니다. 별도 학습 scalar α는 없습니다.
 
@@ -83,52 +117,18 @@ mIoU는 영상별 네 클래스 IoU의 평균을 구한 뒤 20장에 대해 동�
 
 모델별 Dice·Lovasz 계산 방식과 증강 순서는 [상세 모델링 문서](docs/FINAL_MODELING_KO.md)에 명시했습니다.
 
-## 전체 파이프라인
+## 추론과 앙상블
 
-```mermaid
-flowchart TD
-    A[Grayscale microscopy image] --> B[448 × 448 context tiles]
-    B --> M1[Model 1: ConvNeXt-Tiny U-Net + Raw Detail]
-    B --> M2[Model 2: ResNet101 U-Net + Semantic-Gated Detail]
-    B --> M3[Model 3: Full U2-Net + ECA]
-    M1 --> P1[D4 inverse transform + central 224 crop + tile average]
-    M2 --> P2[D4 inverse transform + central 224 crop + tile average]
-    M3 --> P3[D4 inverse transform + central 224 crop + tile average]
-    P1 -->|0.30| E[Original-resolution probability sum]
-    P2 -->|0.35| E
-    P3 -->|0.35| E
-    E --> O[Argmax + four-class RGB mask]
-```
+각 모델은 448×448 입력의 중앙 224×224 예측을 stride 112로 복원하고 D4 8시점과 중첩 영역의 확률을 평균합니다. 최종 예측은 `0.30 P₁ + 0.35 P₂ + 0.35 P₃`에 argmax를 적용합니다.
 
-세 모델은 서로 다른 내부 패키지를 사용하므로 **독립 Python 프로세스에서 순차 실행**합니다. 공통 추론·앙상블 코드는 `src/`에 모았으며 모델별 학습 소스는 원래 import 구조를 유지합니다.
-
-## 앙상블 선택과 효과
-
-세 모델 모두 같은 체크포인트에서 D4 추론을 적용했을 때 성능이 높아졌습니다.
-
-| 모델 | 단일 시점 mIoU | D4 mIoU | 변화 |
-|---|---:|---:|---:|
-| Model 1 | 79.6670% | 80.3762% | +0.7092%p |
-| Model 2 | 79.6006% | 80.3861% | +0.7854%p |
-| Model 3 | 80.0073% | 80.2360% | +0.2287%p |
-
-각 모델의 확률을 원본 해상도로 복원한 뒤, 모든 영상·클래스에 동일한 비중을 적용했습니다.
-
-```text
-P_final = 0.30 × P_model1 + 0.35 × P_model2 + 0.35 × P_model3
-D4 시점 평균 → 중첩 패치 평균 → 모델별 가중합 → argmax
-```
-
-| 조합 | Validation mIoU |
+| 구성 | Validation mIoU |
 |---|---:|
-| 최고 단일 모델: Model 2 | 80.3861% |
-| Model 1 + Model 2, 40:60 | 80.8450% |
+| 최고 단일 모델: Model 2 D4 | 80.3861% |
+| Model 1·2, 40:60 | 80.8450% |
 | 세 모델 동일 비중 | 80.9997% |
-| **세 모델 30:35:35** | **81.0183%** |
+| **최종 30:35:35** | **81.0183%** |
 
-검토한 양의 5% 간격 비중 격자에서 30:35:35가 가장 높았습니다. 동일 비중 대비 추가 개선은 약 **0.0186%p**로, 주요 개선은 세 모델의 결합에서 나타났습니다. 탐색 당시 Model 2가 틀린 픽셀 중 20.4088%를 Model 3이 맞혀 오류의 보완성을 확인했습니다. 이는 구조 차이만의 효과를 분리한 실험은 아닙니다.
-
-최종 오류의 89.53%는 정답 경계 양쪽 2픽셀 이내에 집중됐습니다. 경계 주변은 전체 픽셀의 48.13%이며, 해당 영역 오분류율은 11.43%, 내부는 1.24%였습니다. 남은 과제는 **미세 경계와 Eutectic Si의 혼동 감소**입니다.
+검토한 양의 5% 비중 격자에서 30:35:35가 가장 높았습니다. 학습·구조·실험 조건은 [상세 문서](docs/FINAL_MODELING_KO.md)에서 확인할 수 있습니다.
 
 ## 저장소 구조
 
@@ -153,12 +153,12 @@ Thirdparty/weights/         # 별도 제공 ImageNet 가중치; Git 제외
 run/checkpoints/            # 별도 제공 최종 best.pt; Git 제외
 run/inference/              # 생성 확률·마스크·평가 결과; Git 제외
 run/retraining/             # 새 학습 결과; Git 제외
-experiments/                # 기존 비교 실험별 코드·설정
-mimu/, 루트 Python 파일     # 기존 실험 실행 경로; 최종 진입점은 src/
-docs/                      # 결과·실험 근거·실행 및 과거 기록
+tests/                     # 최종 파이프라인 검증
+docs/                      # 모델 설명·결과·실험 기록(Markdown)
+  experiments/             # 과거 실험 설명; 실행 코드는 보관 브랜치
 ```
 
-데이터, 체크포인트, 대용량 확률·마스크는 저장소에 포함하지 않습니다. 기존 실험 코드를 이동하면 과거 실행 경로가 바뀌므로 원래 위치에 보존했습니다. [문서 안내](docs/README.md)
+데이터, 체크포인트, 대용량 확률·마스크는 저장소에 포함하지 않습니다. main에는 최종 학습·추론에 필요한 코드만 남겼습니다. 실험 설명과 측정값은 Markdown으로 보존하고, 과거 실행 코드·설정·릴리스는 [보관 브랜치](https://github.com/leesangwon393/KoMaP-AI-COMPETITION-2026/tree/archive/experiments-before-cleanup-20261015)에 남겼습니다. [문서 안내](docs/README.md)
 
 ## 실행
 

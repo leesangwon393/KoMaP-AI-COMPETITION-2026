@@ -29,6 +29,6 @@
 
 세 모델은 서로 다른 내부 모듈을 사용하므로 독립 프로세스로 실행합니다. 새로운 학습 폴더가 이미 있으면 시작하지 않습니다. 체크포인트의 config와 소스 내부 state dict 구조는 보존합니다. `supervised_center` 등 과거 메타데이터 문구보다 최종 `full_context_supervision` 실행 플래그와 실제 학습 코드를 기준으로 감독 영역을 읽어야 합니다.
 
-Model 1·2 공통 factory에서는 배포 recipe에 사용하지 않는 후보 옵션·보조 손실·증강을 제외했습니다. 기존 실험은 `experiments/` 및 Git 이력으로 추적합니다. 공개 초기화 가중치와 데이터가 없는 상태의 CPU 구조 검사를 실제 제출 체크포인트의 수치 재현으로 해석하지 않습니다.
+Model 1·2 공통 factory에서는 배포 recipe에 사용하지 않는 후보 옵션·보조 손실·증강을 제외했습니다. 실험 결과는 `docs/experiments/`의 Markdown과 Git 보관 브랜치로 추적합니다. 공개 초기화 가중치와 데이터가 없는 상태의 CPU 구조 검사를 실제 제출 체크포인트의 수치 재현으로 해석하지 않습니다.
 
-기반 소스와 라이선스는 [licenses/SOURCES.txt](licenses/SOURCES.txt)에 있습니다. 기존 `mimu/`, 루트 스크립트, `experiments/`, `docs/`, `releases/`의 실행 경로는 유지합니다.
+기반 소스와 라이선스는 [licenses/SOURCES.txt](licenses/SOURCES.txt)에 있습니다. 과거 `mimu/`, 루트 스크립트, `experiments/`, `releases/`는 `archive/experiments-before-cleanup-20261015` 브랜치에 보존합니다. main에는 최종 실행 의존 코드와 Markdown 실험 기록을 유지합니다.

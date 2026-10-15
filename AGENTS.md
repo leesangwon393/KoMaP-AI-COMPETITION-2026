@@ -8,4 +8,4 @@
 - Use existing environments; do not create an environment automatically.
 - Do not modify or duplicate shared dataset originals. Use direct references or symlinks.
 - Inspect existing implementation before adding files. Prefer minimal changes without unnecessary wrappers or abstraction.
-- Historical root scripts, experiments/, docs/, releases/ are existing history. Do not delete or relocate them as part of unrelated changes.
+- Final training/inference code lives in src/. Experimental history in docs/ is Markdown only; original experiment code and releases are preserved on archive/experiments-before-cleanup-20261015. Do not reintroduce historical runners into main.

@@ -2,7 +2,7 @@
 
 R03(ResNet101 U-Net/scSE + channel-gate recurrent residual branch)의 증강 비교 기록입니다. 최종 Model 2(R073)와 다른 구조이므로 이 결과를 최종 세 모델의 직접적인 제거 실험으로 확대하지 않습니다.
 
-저장된 완료 결과 **L4 28회·T4 6회**를 재집계했습니다. 각 계열 내부의 환경·코드 해시·데이터 manifest·증강 외 설정은 일치합니다. 모델을 재학습하거나 예측 마스크를 재평가한 결과가 아닙니다. [완료 run별 지표 CSV](../resources/experiment_results/augmentation.csv)
+저장된 완료 결과 **L4 28회·T4 6회**를 재집계했습니다. 각 계열 내부의 환경·코드 해시·데이터 manifest·증강 외 설정은 일치합니다. 모델을 재학습하거나 예측 마스크를 재평가한 결과가 아닙니다. [완료 run별 지표 CSV](AUGMENTATION_RUNS_KO.md)
 
 ## 비교 조건
 
@@ -85,4 +85,4 @@ R03(ResNet101 U-Net/scSE + channel-gate recurrent residual branch)의 증강 비
 
 원자료는 `r03_augmentation_gpu-l4-aug1_20261005/trials/`와 `r03_brightness_reproduction_gpu-l4-r03-repro_20261006/trials/`의 `status.json`, `config.json`, `valid_single.json`, `valid_d4.json`, `environment.json`입니다. 완료 상태·150epoch·Validation20·부재 클래스 정책을 확인하고, 저장된 영상별 mIoU 평균 및 status의 최종값과 일치하는지 검사했습니다.
 
-CSV의 mIoU·IoU·recall·오류율은 모두 0~100 단위입니다. 표의 Δ는 같은 seed의 조건 점수−대조군 점수를 평균한 %p이며 반올림은 소수 넷째 자리입니다. 서로 다른 장비·소스의 절대 점수는 합치지 않았습니다. 변환 정의와 난수 정합 검사는 [증강 실험 코드](../experiments/r03_augmentation_lab/README_KO.md)를 참조하세요.
+CSV의 mIoU·IoU·recall·오류율은 모두 0~100 단위입니다. 표의 Δ는 같은 seed의 조건 점수−대조군 점수를 평균한 %p이며 반올림은 소수 넷째 자리입니다. 서로 다른 장비·소스의 절대 점수는 합치지 않았습니다. 변환 정의와 난수 정합 검사는 [증강 실험 코드](experiments/r03_augmentation_lab/README_KO.md)를 참조하세요.

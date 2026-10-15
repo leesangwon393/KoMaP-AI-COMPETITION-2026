@@ -8,7 +8,7 @@ Experiments on four-class segmentation of optical-microscopy images. The reposit
 
 The 00:22 KST snapshot records **53/103 completed runs** in the current queues. The separate H100 gate suite is **32/32 complete according to the supplied server report**. The ledger has 151 records including historical runs, evaluations and overlapping seed aggregates; it is not a count of independent training runs.
 
-See the [complete Korean summary](experiment_snapshot_20261008/TOTAL_SUMMARY_KO.md), [experiment ledger](experiment_snapshot_20261008/EXPERIMENTS.csv), and [same-seed comparisons with diagnostics and bootstrap intervals](experiment_snapshot_20261008/PAIRED_RESULTS.csv).
+See the [complete Korean summary](experiment_snapshot_20261008/TOTAL_SUMMARY_KO.md), [experiment ledger](experiment_snapshot_20261008/EXPERIMENTS.csv.md), and [same-seed comparisons with diagnostics and bootstrap intervals](experiment_snapshot_20261008/PAIRED_RESULTS.csv.md).
 
 | Cohort / change | Paired D4 delta (percentage points) | Evidence |
 |---|---:|---|
@@ -22,9 +22,9 @@ See the [complete Korean summary](experiment_snapshot_20261008/TOTAL_SUMMARY_KO.
 
 These deltas compare each cohort with its own same-seed baseline. They must not be pooled across hardware, source versions or evaluation conditions. All scores are validation results. The additional L4 recovery monitor lost its connection; runtime termination has not been confirmed.
 
-The [U-Net + Transformer package](../experiments/transformer_hybrid_lab_20261007/README_KO.md) implements HT_BOT, HT_PYR and HT_DEC16, with pretrained Swin-T, matched B controls, fixed optimizer groups, freeze/unfreeze scheduling and checkpoint RNG replay. CPU architecture and interruption/resume checks passed; full-size H100 CUDA checks and real-data hybrid training have not started. Batch4/8/16 profiling is supported; compare B and hybrids at the same selected batch.
+The [U-Net + Transformer package](experiments/transformer_hybrid_lab_20261007/README_KO.md) implements HT_BOT, HT_PYR and HT_DEC16, with pretrained Swin-T, matched B controls, fixed optimizer groups, freeze/unfreeze scheduling and checkpoint RNG replay. CPU architecture and interruption/resume checks passed; full-size H100 CUDA checks and real-data hybrid training have not started. Batch4/8/16 profiling is supported; compare B and hybrids at the same selected batch.
 
-[Download the small source-only server ZIP](../releases/KoMaP_UNet_Transformer_Code_20261008.zip). Prepare authorized data separately using the [data layout](DATA_AND_REPRODUCIBILITY_KO.md).
+[Download the small source-only server ZIP](https://github.com/leesangwon393/KoMaP-AI-COMPETITION-2026/blob/95b268a/releases/KoMaP_UNet_Transformer_Code_20261008.zip). Prepare authorized data separately using the [data layout](DATA_AND_REPRODUCIBILITY_KO.md).
 
 ## Best supported recipe
 
@@ -68,7 +68,7 @@ Training uses the central 224×224 target from each 448×448 context crop. Infer
 - `experiments/r03_augmentation_lab/` and `r03_brightness_reproduction_lab_20261006/`: augmentation controls and cross-environment brightness reproduction.
 - `experiments/scse_layer_lab_20261005/`: staged layer/mechanism/spatial gate search associated with the final H100 report.
 - `experiments/transformer_hybrid_lab_20261007/`: implemented CNN/Swin and decoder-attention hybrids, CPU checks, batch profiling and server queue.
-- `experiments/followup_unet_lab/`: 2026-10-04 follow-up queue: matched B/D03 seeds42–44, reduced no-offset frequency fusion, connectivity auxiliary supervision, PixelShuffle, loss ratios, and AdamW learning rates. Ten tests and all nine configuration preflights passed. The latest snapshot has nine of thirteen follow-up runs complete; scores and remaining work are in the current experiment summary. See [execution protocol](../experiments/followup_unet_lab/README_KO.md).
+- `experiments/followup_unet_lab/`: 2026-10-04 follow-up queue: matched B/D03 seeds42–44, reduced no-offset frequency fusion, connectivity auxiliary supervision, PixelShuffle, loss ratios, and AdamW learning rates. Ten tests and all nine configuration preflights passed. The latest snapshot has nine of thirteen follow-up runs complete; scores and remaining work are in the current experiment summary. See [execution protocol](experiments/followup_unet_lab/README_KO.md).
 
 ## Quick start
 
