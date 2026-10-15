@@ -1,0 +1,5 @@
+{
+  "data_root": "resources/data",
+  "device": "cuda:0",
+  "split": "test"
+}

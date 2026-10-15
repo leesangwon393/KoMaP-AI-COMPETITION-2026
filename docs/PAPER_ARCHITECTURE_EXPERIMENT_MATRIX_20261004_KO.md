@@ -117,4 +117,4 @@ SASAPD는 같은 논문에 쓰인 아키텍처이므로 표에서 제외하지 �
 
 우선 encoder 대표군은 ConvNeXt V2-T/B, EfficientNet-B3/B4, SE-ResNeXt50_32x4d, DenseNet161, Swin-T, MiT-B2/B5, R101 Im→Micro, RSU다. 이는 KoMaP에서의 사전 우열이 아니라 표현 방식·비용 다양성을 위한 순서다. 전체 encoder 목록과 모든 full 구조는 후속 목록에서 유지한다.
 
-현재 구현 상태는 [읽기 목록](TASK_MATCHED_PAPER_READING_LIST_20261004_KO.md), [U²-Net package](../experiments/u2net_server_lab/README_KO.md), [followup package](../experiments/followup_unet_lab/README_KO.md)를 참고한다. 공식 코드 공개 여부와 실제 재현 완료를 구별한다. 논문 full structure를 실행했다고 기록하려면 고정 source/version, module parity, 입력/출력 검사, 학습 loss, 초기화 및 artifact를 확인해야 한다.
+현재 구현 상태는 [읽기 목록](TASK_MATCHED_PAPER_READING_LIST_20261004_KO.md), [U²-Net package](experiments/u2net_server_lab/README_KO.md), [followup package](experiments/followup_unet_lab/README_KO.md)를 참고한다. 공식 코드 공개 여부와 실제 재현 완료를 구별한다. 논문 full structure를 실행했다고 기록하려면 고정 source/version, module parity, 입력/출력 검사, 학습 loss, 초기화 및 artifact를 확인해야 한다.

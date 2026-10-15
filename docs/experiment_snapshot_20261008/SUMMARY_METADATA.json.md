@@ -1,0 +1,28 @@
+# SUMMARY_METADATA
+
+과거 실험 메타데이터 원문입니다. 최종 실행 설정과 구분합니다.
+
+```json
+{
+  "captured_at_kst": "2026-10-08T00:22:47+09:00",
+  "records": 151,
+  "current_completed": 53,
+  "current_planned": 103,
+  "h100_reported_complete": 32,
+  "pending_unstarted": 45,
+  "paired_seed_view_rows": 84,
+  "paired_aggregates": 21,
+  "reported_server_d03": {
+    "cohort": "팀 전달 서버 D03",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "mean_delta_pp": -0.06466666666666666,
+    "wins": 1,
+    "n": 3,
+    "evidence": "Published rounded deltas; raw checkpoints/masks not retrieved"
+  }
+}
+```

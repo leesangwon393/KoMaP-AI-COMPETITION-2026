@@ -1,0 +1,14 @@
+{
+  "model1": {
+    "sha256": "f2093d2b9d07b48279090e07e0d43786d92af1f33ac81f7c5b29442073c93ed2",
+    "epoch": 172
+  },
+  "model2": {
+    "sha256": "dd741f31b7b5ee5a0f865ca360ac6283d87cd50272e0d5291bfbc553db7a5f12",
+    "epoch": 184
+  },
+  "model3": {
+    "sha256": "b400eec51a33ba002ce247e84ed343fd643bc7f738d89edc1829db2745b36ada",
+    "epoch": 135
+  }
+}

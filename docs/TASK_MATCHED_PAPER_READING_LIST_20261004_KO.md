@@ -19,7 +19,7 @@
 
 기존 `runs/confusion_audit_v1/RESULTS_KO.md`의 R34/scSE 분석에서는 Eutectic Si의 FP가 Al3Ni와 자주 혼동됐다. 그 수치는 현재 R101 기준선의 새 오류 재측정이 아니다. 서버 D03 추가 seed43/44는 접촉부 오류를 줄였지만 D4 평균은 B보다 0.1349%p 낮았다. 따라서 경계 CE 강화 하나만으로 전체 성능을 해결한다는 가설보다 **상 구분에 쓰는 표현과 복원 품질을 개선하는 가설**을 우선한다. 추가 seed는 2개여서 보편적 우열을 확정한 결과는 아니다.
 
-집계 원자료: [DATA_CHARACTERISTICS_PAPER_SELECTION_20261004.json](DATA_CHARACTERISTICS_PAPER_SELECTION_20261004.json). 서버 결과: [D03_ADDITIONAL_SEEDS_SERVER_RESULTS_20261004_KO.md](D03_ADDITIONAL_SEEDS_SERVER_RESULTS_20261004_KO.md).
+집계 원자료: [DATA_CHARACTERISTICS_PAPER_SELECTION_20261004.json](DATA_CHARACTERISTICS_PAPER_SELECTION_20261004.json.md). 서버 결과: [D03_ADDITIONAL_SEEDS_SERVER_RESULTS_20261004_KO.md](D03_ADDITIONAL_SEEDS_SERVER_RESULTS_20261004_KO.md).
 
 ## 먼저 읽을 12편
 
