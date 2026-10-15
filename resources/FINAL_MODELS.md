@@ -1,75 +1,34 @@
-# Final model1 / model2 / model3 code
+# 최종 실행 파일 배치와 재현 계약
 
-## Directory rules
+프로젝트 개요·성능·명령은 [README](../README.md), 구조와 학습 선택은 [모델링 문서](../docs/FINAL_MODELING_KO.md)를 참조하세요.
 
-```text
-src/                  inference/ensemble, shared model factory and metrics
-  model1/             model.py, train.py, infer.py and required model-specific code
-  model2/
-  model3/
-resources/            settings.json, model configs, environment, checkpoint hashes, licenses
-Thirdparty/weights/   public ImageNet initialization weights (not in Git)
-run/checkpoints/      released model1/model2/model3 best.pt (not in Git)
-run/inference/        newly generated probabilities, masks, metrics
-run/retraining/       fresh training outputs
-script/               reserved for reusable shell workflows (no redundant wrappers)
-```
+## 경로
 
-The existing root scripts, experiments/, docs/ and releases/ are historical repository content; this change does not relocate or overwrite those files. Required model-specific Python packages retain their internal layout to avoid import collisions. New project implementation lives under src. Do not edit external code in Thirdparty. Do not commit data, checkpoints or outputs.
+| 경로 | 역할 |
+|---|---|
+| `src/` | 최종 공통 추론·앙상블·factory·평가 |
+| `src/model{1,2,3}/` | 모델 생성·학습·추론 진입점과 모델별 보존 소스 |
+| `resources/` | 데이터 경로·설정·환경·결과 메타데이터·라이선스 |
+| `Thirdparty/weights/` | ImageNet 초기화 가중치(별도 공유, Git 제외) |
+| `run/checkpoints/model{1,2,3}/best.pt` | 배포 체크포인트(별도 공유, Git 제외) |
+| `run/inference/` | 새 확률·마스크·평가 결과 |
+| `run/retraining/` | 새 학습 결과 |
 
-## Final models
+별도 공유 ZIP(예: `A004092_weights.zip`)의 `02_program/models/modelN/best.pt`를 `run/checkpoints/modelN/best.pt`에, `02_program/Thirdparty/weights/*.pth`를 `Thirdparty/weights/`에 배치합니다. 파일을 자동 다운로드하지 않습니다.
 
-| Model | Architecture | Training epochs | Selected epoch | D4 Validation mIoU | Weight |
-|---|---|---:|---:|---:|---:|
-| model1 | ConvNeXt-Tiny U-Net/scSE + raw-detail fusion | 300 | 172 | 80.3762% | 0.30 |
-| model2 | ResNet101 U-Net/scSE + semantic-gated detail | 300 | 184 | 80.3861% | 0.35 |
-| model3 | Full U2-Net + ECA | 150 | 135 | 80.2360% | 0.35 |
+## 입력·출력
 
-Frozen Validation20 image-macro mIoU: **81.01828805454941%**. This is not an official Test score. Validation was used for checkpoint and ensemble selection. Absent in both prediction and truth: class IoU=1. Test ground truth was not used.
+- `settings.json`: `data_root`는 저장소 루트 기준 상대경로 또는 절대경로, `split`은 `valid`/`test`, `device`는 예를 들어 `cuda:0`.
+- 데이터: `train/images`, `train/masks`, `valid/images`, `valid/masks`, `test/images`. 원본은 외부 경로를 직접 참조할 수 있습니다.
+- 추론은 Validation20 또는 Test10을 확인하고 체크포인트 SHA256·epoch·config와 state dict를 검사합니다.
+- 출력: `run/inference/{model1,model2,model3,ensemble}/{split}/{probabilities,masks}/`와 `metrics.json`.
+- 확률은 원본 좌표의 float32 `[4,H,W]`, 채널 순서는 Primary Si / Al3Ni / Eutectic Si / Al입니다.
+- 앙상블은 영상 SHA256·파일명·shape·채널 순서·확률 범위를 검사하고 고정 float32 30:35:35 순서로 합산합니다.
 
-## Setup and separately supplied files
+## 학습과 보존
 
-Linux + NVIDIA CUDA environment:
+세 모델은 서로 다른 내부 모듈을 사용하므로 독립 프로세스로 실행합니다. 새로운 학습 폴더가 이미 있으면 시작하지 않습니다. 체크포인트의 config와 소스 내부 state dict 구조는 보존합니다. `supervised_center` 등 과거 메타데이터 문구보다 최종 `full_context_supervision` 실행 플래그와 실제 학습 코드를 기준으로 감독 영역을 읽어야 합니다.
 
-```sh
-conda env create -f resources/environment.yaml
-conda activate komap-review
-```
+Model 1·2 공통 factory에서는 배포 recipe에 사용하지 않는 후보 옵션·보조 손실·증강을 제외했습니다. 기존 실험은 `experiments/` 및 Git 이력으로 추적합니다. 공개 초기화 가중치와 데이터가 없는 상태의 CPU 구조 검사를 실제 제출 체크포인트의 수치 재현으로 해석하지 않습니다.
 
-No new environment is created automatically by these scripts. Reuse a matching existing environment where available.
-
-The separately supplied `A004092_weights.zip` uses submission paths. Copy:
-- `02_program/models/model1/best.pt` -> `run/checkpoints/model1/best.pt` (likewise model2/model3).
-- `02_program/Thirdparty/weights/*.pth` -> `Thirdparty/weights/*.pth`.
-
-Inference checks checkpoint SHA256 against resources/checkpoints.json and strict-loads the state. Public ConvNeXt-Tiny and ResNet101 weights are also required by model construction and verified by the model code. No weights are committed or downloaded automatically.
-
-Edit resources/settings.json: data_root is relative to repository root (absolute path also accepted), device=cuda:0, split=test or valid. The default resources/data should reference authorized data, ideally by symlink. Expected folders: train/images, train/masks, valid/images, valid/masks, test/images. Do not duplicate shared dataset originals.
-
-## Inference
-
-```sh
-python src/infer.py
-```
-
-Runs three models sequentially and then fixed soft voting. Input448, central224, stride112; D4 rotations/reflections with inverse transforms; average overlapping probabilities; weighted sum30/35/35; argmax; RGB masks at original resolution. Outputs: run/inference/ensemble/{split}/masks, with probabilities and metrics alongside. Validation20 and Test10 image counts are checked.
-
-Individual model: `python src/model1/infer.py` (likewise model2/model3). Combine existing probabilities: `python src/ensemble.py`.
-
-## Fresh training
-
-```sh
-python src/model1/train.py
-python src/model2/train.py
-python src/model3/train.py
-```
-
-Released seed42 recipes, AdamW/cosine, 300/300/150epochs. Models1/2 use public ImageNet encoder initialization; model3 is scratch. Output run/retraining/modelN must not already exist. Released checkpoints are preserved. Fresh retraining is optional and is not needed for inference; inference reproducibility does not imply bitwise-identical fresh training.
-
-Model1: full448 supervision, boundary sampling, Cutout, gradient centralization, all-class Lovasz. Model2: full448 supervision, distinct-image batches, squared Dice. Model3: central224 supervision, ECA in outer RSU residual paths. Configs are unchanged from the released checkpoints; historical internal identifiers are retained only for compatibility. External names are model1/model2/model3.
-
-## Source provenance and validation
-
-Code is from the final submission package, with filesystem paths adapted to AGENTS.md roles. The copied model-specific implementation is kept in src; resources/licenses retains source attribution and U2-Net license. No dataset, masks, probability arrays, report or checkpoints are included.
-
-Packaging validation: Python syntax, JSON parsing, entry-point path checks, and unchanged config/model source comparisons. Full GPU inference is not rerun for a path-only repository publication.
+기반 소스와 라이선스는 [licenses/SOURCES.txt](licenses/SOURCES.txt)에 있습니다. 기존 `mimu/`, 루트 스크립트, `experiments/`, `docs/`, `releases/`의 실행 경로는 유지합니다.
