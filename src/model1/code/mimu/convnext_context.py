@@ -33,8 +33,6 @@ class ConvNeXtContextUNet(nn.Module):
             self.detail_refiner = ResidualDetailRefiner()
 
     def forward(self, x, auxiliary=False):
-        if hasattr(self, "input_transform"):
-            x = self.input_transform(x)
         raw = x
         resize_mode = getattr(self, 'decoder_resize_mode', 'bilinear')
         align_corners = False if resize_mode == 'bilinear' else None
@@ -43,13 +41,11 @@ class ConvNeXtContextUNet(nn.Module):
         for index, layer in enumerate(self.encoder):
             normalized = layer(normalized)
             if index in (1, 3, 5, 7):
-                feature = self.encoder_norm(normalized) if getattr(self, "swin_encoder", False) and index == 7 else normalized
-                skips.append(feature.permute(0, 3, 1, 2).contiguous() if getattr(self, "swin_encoder", False) else feature)
+                feature = normalized
+                skips.append(feature)
         decoded = skips[-1]
         for skip, block in zip(reversed(skips[:-1]), (self.decoder4, self.decoder3, self.decoder2)):
             decoded = F.interpolate(decoded, size=skip.shape[-2:], mode=resize_mode, align_corners=align_corners)
-            if block is self.decoder2 and hasattr(self, 'skip_gate'):
-                skip = skip * (2 * torch.sigmoid(self.skip_gate(torch.cat((decoded, skip), 1))))
             decoded = block(torch.cat((decoded, skip), 1))
             if block is self.decoder4 and hasattr(self, 'global_context'):
                 context = self.global_context(decoded)

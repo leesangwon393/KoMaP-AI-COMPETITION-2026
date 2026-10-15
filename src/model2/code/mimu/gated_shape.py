@@ -17,11 +17,7 @@ class SemanticGate(nn.Module):
 
     def forward(self, detail, semantic):
         context = F.interpolate(semantic, size=detail.shape[-2:], mode="bilinear", align_corners=False)
-        if hasattr(self, 'local_context'):
-            context = context + self.local_context(context)
         gate_logits = self.projection(context)
-        if hasattr(self, 'detail_projection'):
-            gate_logits = gate_logits + self.detail_projection(detail)
         return detail * torch.sigmoid(gate_logits)
 
 
@@ -42,16 +38,9 @@ class SemanticGatedDetailUNet(nn.Module):
             nn.init.zeros_(self.residual_fusion.weight)
 
     def forward(self, image, auxiliary=False):
-        if hasattr(self, "input_transform"):
-            image = self.input_transform(image)
         _, semantic_features = self.semantic(image, auxiliary=True)
         detail_input = image
-        if hasattr(self, 'detail_blur_kernel'):
-            detail_input = F.conv2d(F.pad(image, (1, 1, 1, 1), mode='reflect'), self.detail_blur_kernel)
         detail = self.detail_stem(detail_input)
-        if hasattr(self, 'gradient_stem'):
-            gradients = F.conv2d(F.pad(image, (1, 1, 1, 1), mode='reflect'), self.gradient_kernel)
-            detail = detail + self.gradient_stem(gradients)
         detail = self.detail_refiner(detail)
         if self.training and not getattr(self, "full_context_supervision", False):
             if image.shape[-2:] != (448, 448):
@@ -64,7 +53,5 @@ class SemanticGatedDetailUNet(nn.Module):
             correction, size=semantic_features.shape[-2:], mode="bilinear", align_corners=False
         )
         features = semantic_features + self.residual_fusion(correction)
-        if hasattr(self, 'feature_dropout'):
-            features = self.feature_dropout(features)
         logits = self.semantic.head(features)
         return (logits, features) if auxiliary else logits

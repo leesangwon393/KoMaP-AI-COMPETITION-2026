@@ -15,5 +15,6 @@ if __name__ == '__main__':
     config = json.loads((folder.parents[1] / 'resources' / folder.name / 'config.json').read_text())
     torch.set_num_threads(4)
     output = package / 'run/retraining/model3'
-    assert not output.exists(), 'Choose a new retraining output; released results are protected.'
+    if output.exists():
+        raise FileExistsError(f'Retraining output already exists: {output}')
     train(config, (package / settings['data_root']).resolve(), output, torch.device(settings['device']), resume=False)

@@ -3,3 +3,5 @@ Upstream U2-Net: https://github.com/xuebinqin/U-2-Net
 License obtained from https://raw.githubusercontent.com/xuebinqin/U-2-Net/master/LICENSE
 R052/R073 source: audited round56 snapshots. torchvision public ConvNeXt-Tiny / ResNet101 weights retained with exact SHA in original config.
 No claim that existing U-Net, scSE, ECA, ConvNeXt or ResNet methods were invented by this team.
+
+2026-10-15 adaptation: unused experiment constructors/launchers/objectives removed; model1/2 training, evaluation, tiling and checkpoint I/O consolidated in src/. Architecture state-dict layout and fixed recipes retained. Upstream vendor_u2net.py remains unchanged. See docs/CODE_REVIEW_20261015_KO.md for verification scope.

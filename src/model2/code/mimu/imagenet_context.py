@@ -32,25 +32,7 @@ class ImageNetContextUNet(ResNet34UNet):
 
     def forward(self, x, auxiliary=False):
         x = (x.repeat(1, 3, 1, 1) - self.input_mean) / self.input_std
-        if getattr(self, "swin_encoder", False):
-            input_size = x.shape[-2:]
-            skips = []
-            for index, layer in enumerate(self.encoder):
-                x = layer(x)
-                if index in (1, 3, 5, 7):
-                    feature = self.encoder_norm(x) if index == 7 else x
-                    skips.append(feature.permute(0, 3, 1, 2).contiguous())
-            stem = F.interpolate(skips[0], size=(input_size[0] // 2, input_size[1] // 2), mode="bilinear", align_corners=False)
-            x = skips[-1]
-            for skip, decoder in ((skips[2], self.decoder4), (skips[1], self.decoder3), (skips[0], self.decoder2), (stem, self.decoder1)):
-                x = F.interpolate(x, size=skip.shape[-2:], mode="bilinear", align_corners=False)
-                x = decoder(torch.cat((x, skip), 1))
-                if decoder is self.decoder4 and hasattr(self, "global_context"):
-                    x = x + self.global_context(x)
-            features = self.decoder0(F.interpolate(x, size=input_size, mode="bilinear", align_corners=False))
-            logits = self.head(features)
-        else:
-            logits, features = super().forward(x, return_features=True)
+        logits, features = super().forward(x, return_features=True)
         if self.training and not getattr(self, "full_context_supervision", False):
             assert logits.shape[-2:] == (448, 448)
             logits, features = logits[..., 112:336, 112:336], features[..., 112:336, 112:336]

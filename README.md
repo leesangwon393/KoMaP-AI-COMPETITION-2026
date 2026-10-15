@@ -136,12 +136,15 @@ RSU는 내부 U 분기의 다중 해상도 특징을 입력 합성곱 특징에 
 src/
   infer.py                 # 세 모델 추론 후 최종 앙상블
   inference.py             # 공통 체크포인트 검사·확률/마스크 저장
+  training.py              # Model 1/2 공통 학습 루프; 의존성을 명시적으로 전달
+  evaluation.py, tiling.py  # Model 1/2 원본 해상도 평가·D4 타일 복원
+  checkpoint_io.py          # 체크포인트·JSON·데이터 manifest 저장
   ensemble.py              # 고정 30:35:35 확률 결합
   metrics.py               # 공통 팔레트·Validation 평가
   model_factory.py         # 최종 Model 1/2 구성·Cutout·GC
   model{1,2,3}/
     model.py, train.py, infer.py
-    code/                  # 모델별 보존 구현·학습 의존 코드
+    code/                  # 최종 모델·샘플링·손실 구현
 resources/
   settings.json            # 데이터 경로·device·split
   model{1,2,3}/config.json  # 체크포인트에 대응하는 고정 recipe
@@ -164,7 +167,7 @@ docs/                      # 모델 설명·결과·실험 기록(Markdown)
 
 ### 1. 환경과 별도 가중치 준비
 
-기존의 호환 환경을 우선 사용하세요. 재현 기준은 Linux / Python 3.10.21 / PyTorch 2.7.1+cu128 / torchvision 0.22.1+cu128이며 전체 버전은 [environment.yaml](resources/environment.yaml)에 있습니다. 모델 1·2 학습 코드의 `fcntl` 의존성 때문에 Windows에서는 WSL/Linux가 필요합니다.
+기존의 호환 환경을 우선 사용하세요. 재현 기준은 Linux / Python 3.10.21 / PyTorch 2.7.1+cu128 / torchvision 0.22.1+cu128이며 전체 버전은 [environment.yaml](resources/environment.yaml)에 있습니다. 모델 3 학습의 출력 폴더 잠금(`fcntl`) 때문에 Windows에서는 WSL/Linux가 필요합니다.
 
 별도 공유된 가중치 ZIP의 파일을 다음 위치에 배치합니다.
 
@@ -246,9 +249,9 @@ python src/model3/train.py
 이번 저장소 정리는 최종 구조·가중치·확률 합산 순서를 유지합니다. CPU 구조 비교와 실행·앙상블 검사는 수행하되, 별도 가중치와 CUDA 환경이 필요한 전체 Validation/Test 추론 및 재학습을 새로 수행한 결과로 표기하지 않습니다.
 
 ```bash
-python -m pytest tests/test_final_pipeline.py -q
+python -m pytest tests -q
 ```
 
-검사 범위와 결과는 [검증 기록](docs/VALIDATION_20261015_KO.md)에 정리했습니다.
+검사 범위와 결과는 [검증 기록](docs/VALIDATION_20261015_KO.md), 제거 근거와 유지한 제약은 [코드 비판 검토](docs/CODE_REVIEW_20261015_KO.md)에 정리했습니다.
 
 기반 알고리즘과 소스 출처: [licenses](resources/licenses/SOURCES.txt). 과거 2026-10-08 시점 README는 [기록 문서](docs/README_HISTORY_20261008.md)에 보존했습니다.
