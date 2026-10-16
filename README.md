@@ -42,11 +42,11 @@ mIoU는 영상별 네 클래스 IoU의 평균을 구한 뒤 20장에 대해 동�
 
 ## 모델 아키텍처
 
-아래 그림은 **U자형 인코더–디코더 구조**와 모델별 핵심 분기를 보여줍니다. 설명 문장과 채널·해상도 수치를 줄이고 skip connection, 상세 정보 결합, gate와 ECA 위치를 강조했습니다. 클릭하면 크게 볼 수 있고, [SVG 원본](resources/images/report-architectures.svg)으로 확대·편집할 수 있습니다.
+아래 그림은 [원본 tldraw 보드](https://www.tldraw.com/f/YBJPAJcnnwrRHUzurQZyE)의 배치와 스타일을 유지하면서 결합 오류와 긴 라벨을 수정한 버전입니다. 해상도 숫자와 설명 문장을 줄이고, 원래의 scSE·ECA 상세도는 유지했습니다. 클릭하면 크게 볼 수 있고, [SVG 원본](resources/images/report-architectures.svg)으로 확대·편집할 수 있습니다.
 
 [![세 모델의 핵심 아키텍처와 정확한 상세 경로 결합](resources/images/report-architectures.png)](resources/images/report-architectures.png)
 
-파랑은 인코더, 주황은 디코더, 초록은 raw detail, 보라는 semantic gate입니다. 점선은 skip connection, `C`는 concatenation, `+`는 덧셈, `×`는 게이트 곱셈, `E`는 RSU 내부 ECA입니다.
+파랑은 인코더, 주황은 디코더, 초록은 raw detail 경로입니다. 점선은 skip connection, `C`는 concatenation, `+`는 덧셈, `×`는 곱셈, `A`는 scSE, `B`는 RSU 내부 ECA입니다.
 
 ### Model 1 — ConvNeXt-Tiny U-Net + Raw Detail
 
