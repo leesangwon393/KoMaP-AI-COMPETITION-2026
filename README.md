@@ -42,11 +42,11 @@ mIoU는 영상별 네 클래스 IoU의 평균을 구한 뒤 20장에 대해 동�
 
 ## 모델 아키텍처
 
-아래 그림은 실제 `forward`와 고정 모델 설정을 기준으로 수정한 아키텍처입니다. 각 모델의 전체 디코더와 상세 정보 결합 위치를 표시했습니다. 클릭하면 크게 볼 수 있고, [SVG 원본](resources/images/report-architectures.svg)으로 확대·편집할 수 있습니다.
+아래 그림은 실제 `forward` 기준의 핵심 아키텍처입니다. 원래 U자형 배치를 유지하고, 문장·채널 수·해상도·attention 상세도는 생략하여 모델별 결합 경로를 강조했습니다. 클릭하면 크게 볼 수 있고, [SVG 원본](resources/images/report-architectures.svg)으로 확대·편집할 수 있습니다.
 
-[![코드와 일치하도록 수정한 세 모델 아키텍처와 scSE·ECA 구조](resources/images/report-architectures.png)](resources/images/report-architectures.png)
+[![세 모델의 핵심 아키텍처와 정확한 상세 경로 결합](resources/images/report-architectures.png)](resources/images/report-architectures.png)
 
-파란색은 인코더, 주황색은 디코더, 점선은 skip connection, `C`는 특징 연결입니다. `A`는 scSE, `B`는 RSU 내부 ECA의 적용 위치입니다.
+진한 파랑은 인코더, 주황은 디코더, 초록은 raw detail 경로, 보라는 의미 게이트입니다. 점선은 skip connection, `C`는 concatenation, `+`는 덧셈, `×`는 게이트 곱셈, `E`는 RSU 내부 ECA를 나타냅니다.
 
 ### Model 1 — ConvNeXt-Tiny U-Net + Raw Detail
 
